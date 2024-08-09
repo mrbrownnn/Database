@@ -1,0 +1,38 @@
+						Fix the problem: HEADER ALREADY SENT
+
+==> Do chỉ có thể gửi yêu cầu HTTP lên PHP server được duy nhất lần đầu tiên <==
+==> PHP server sẽ xóa tất cả header nhận được và gửi tất cả output ra client mà nó muốn <==
+
+#. Cause
+1.	Sử dụng header(), header_remove(), session_start(), setcookie(), ob_[get/end]_flush(), 
+	echo, print, printf, print_r, readfile, user_defined_function
+2.	Space/Newline thừa trước <?php và sau ?>
+3.	Ký tự UTF-8 ẩn đặc biệt
+4.	Sử dụng các thẻ <HTML> trước <?php 
+	(Các thẻ không được định dạng bên trong <?php)
+5.	
+
+
+#. Solution
+1. 	Sử dụng ob_start(), ob_get_contents(), ob_end_clean()
+		Ví dụ: page1 (nhấp vào nút) -> page2 (chuyển hướng tiêu đề) -> page0 (trang chủ)
+			==> Bạn phải thêm ob_start() vào trang1
+2.	Nên xử lý tất cả câu lệnh PHP trước và phần hiển thị HTML, CSS, JS thực hiện bên dưới
+3.	Sử dụng header_sent() để kiểm tra header đã được gửi chưa
+		if (headers_sent()) {
+    			die("Redirect failed. Please click on this link: <a href=...>");
+		}
+		else{
+			exit(header("Location: /user.php"));
+		}
+4.	Sử dụng thẻ <meta> để chuyển hướng(không khuyến khích)
+		<meta http-equiv="Location" content="http://example.com/">
+		<meta http-equiv="Refresh" content="2; url=../target.html">
+5.	Sử dụng chuyển hướng trong JS(không khuyến khích)
+		<script> location.replace("target.html"); </script>
+6.	Xóa bỏ Space/Newline trước <?php và sau ?>
+7.	Luôn dùng exit() sau header()
+8.	Luôn sử dụng tham chiếu 301/302
+		header("location: http://example.com",  true,  301 );  exit;
+9.	Chuyển các khối nhỏ ?> <?php thành chung 1 khối <?php ?>
+
